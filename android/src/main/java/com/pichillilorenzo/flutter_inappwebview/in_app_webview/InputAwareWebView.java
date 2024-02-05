@@ -202,25 +202,29 @@ public class InputAwareWebView extends WebView {
                     "Can't set the input connection target because there is no containerView to use as a handler.");
             return;
           }
+          // 在鸿蒙系统下会崩溃
+          try{
+            InputMethodManager imm =
+            (InputMethodManager) getContext().getSystemService(INPUT_METHOD_SERVICE);
+            // This is a hack to make InputMethodManager believe that the target view now has focus.
+            // As a result, InputMethodManager will think that targetView is focused, and will call
+            // getHandler() of the view when creating input connection.
 
-          InputMethodManager imm =
-                  (InputMethodManager) getContext().getSystemService(INPUT_METHOD_SERVICE);
-          // This is a hack to make InputMethodManager believe that the target view now has focus.
-          // As a result, InputMethodManager will think that targetView is focused, and will call
-          // getHandler() of the view when creating input connection.
+            // Step 1: Set targetView as InputMethodManager#mNextServedView. This does not affect
+            // the real window focus.
+            targetView.onWindowFocusChanged(true);
 
-          // Step 1: Set targetView as InputMethodManager#mNextServedView. This does not affect
-          // the real window focus.
-          targetView.onWindowFocusChanged(true);
+            // Step 2: Have InputMethodManager focus in on targetView. As a result, IMM will call
+            // onCreateInputConnection() on targetView on the same thread as
+            // targetView.getHandler(). It will also call subsequent InputConnection methods on this
+            // thread. This is the IME thread in cases where targetView is our proxyAdapterView.
 
-          // Step 2: Have InputMethodManager focus in on targetView. As a result, IMM will call
-          // onCreateInputConnection() on targetView on the same thread as
-          // targetView.getHandler(). It will also call subsequent InputConnection methods on this
-          // thread. This is the IME thread in cases where targetView is our proxyAdapterView.
-
-          // TODO (ALexVincent525): Currently only prompt has been tested, still needs more test cases.
-          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            imm.isActive(containerView);
+            // TODO (ALexVincent525): Currently only prompt has been tested, still needs more test cases.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+              imm.isActive(containerView);
+            }
+          }catch (Exception e){
+            e.printStackTrace();
           }
         }
       });
