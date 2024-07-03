@@ -1324,11 +1324,16 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
                       new Runnable() {
                         @Override
                         public void run() {
-                          InputMethodManager imm =
-                                  (InputMethodManager) getContext().getSystemService(INPUT_METHOD_SERVICE);
-                          if (containerView != null && imm != null && !imm.isAcceptingText()) {
-                            imm.hideSoftInputFromWindow(
-                                    containerView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                          // fix Android 10 crash
+                          try{
+                            InputMethodManager imm =
+                                    (InputMethodManager) getContext().getSystemService(INPUT_METHOD_SERVICE);
+                            if (containerView != null && imm != null && !imm.isAcceptingText()) {
+                              imm.hideSoftInputFromWindow(
+                                      containerView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                            }
+                          }catch (Exception e){
+                            e.printStackTrace();
                           }
                         }
                       },
